@@ -30,4 +30,4 @@ if __name__ == "__main__":
             print("'{}'\t{}".format(pair[0], pair[1]))
         
         print("\nPython list")
-        print(chars.keys())
+        print(sorted(chars.keys()))
