@@ -59,9 +59,10 @@ class Network:
                 self.update_mini_batch(mini_batch, learning_rate)
 
             if test_data:
-                print(
-                    "Epoch {0}: {1} / {2}".format(j, self.evaluate(test_data), n_test)
-                )
+                # print(
+                #     "Epoch {0}: {1} / {2}".format(j, self.evaluate(test_data), n_test)
+                # )
+                print(f"Epoch {j}: loss = {self.evaluate(test_data)}")
             else:
                 print("Epoch {0} complete".format(j))
 
@@ -86,11 +87,15 @@ class Network:
         """Return a tuple ``(nabla_b, nabla_w)`` representing the
         gradient for the cost function C_x.  ``nabla_b`` and
         ``nabla_w`` are layer-by-layer lists of numpy arrays, similar
-        to ``self.biases`` and ``self.weights``."""
+        to ``self.weights``."""
 
+        # gradients of the weights, for each layer
         nabla_w = [np.zeros(w.shape) for w in self.weights]
 
         # feedforward
+
+        y = np.array(y)
+        y.resize((self.sizes[-1], 1))
 
         activation = np.array(x)
         activation.resize((self.sizes[0], 1))
@@ -110,7 +115,12 @@ class Network:
 
         # backward pass
 
+        # print(f"Activation -1:\n{activations[-1]}, shape: {activations[-1].shape}")
+        # print(f"Y:\n{y}, shape: {y.shape}")
+        # print(f"Z -1:\n{zs[-1]}, shape: {zs[-1].shape}")
         delta = self.cost_derivative(activations[-1], y) * sigmoid_prime(zs[-1])
+        # print(f"Delta:\n{delta}, shape: {delta.shape}")
+        # print(f"Activation -2: \n{activations[-2].transpose()}, shape: {activations[-2].transpose().shape}")
         nabla_w[-1] = np.matmul(delta, activations[-2].transpose())
 
         # Note that the variable l in the loop below is used a little
@@ -139,12 +149,27 @@ class Network:
         return nabla_w
 
     def evaluate(self, test_data):
-        """Return the number of test inputs for which the neural
-        network outputs the correct result. Note that the neural
-        network's output is assumed to be the index of whichever
-        neuron in the final layer has the highest activation."""
-        test_results = [(np.argmax(self.feedforward(x)), y) for (x, y) in test_data]
-        return sum(int(x == y) for (x, y) in test_results)
+        """Return the value of the loss function"""
+        # """Return the number of test inputs for which the neural
+        # network outputs the correct result. Note that the neural
+        # network's output is assumed to be the index of whichever
+        # neuron in the final layer has the highest activation."""
+        # test_results = [(np.argmax(self.feedforward(x)), y) for (x, y) in test_data]
+        # return sum(int(x == y) for (x, y) in test_results)
+
+        test_results = [(self.feedforward(x), y) for (x, y) in test_data]
+        loss = sum(self.cost(x, y) for (x, y) in test_results) / len(test_results)
+        return loss
+
+    def cost(self, output_activations, y):
+        y = np.array(y)
+        y.resize((self.sizes[-1], 1))
+        # assert len(output_activations) == len(y)
+        # print(f"Output:\n{output_activations}, shape: {output_activations.shape}")
+        # print(f"Y:\n{y}, shape: {y.shape}")
+        cost = sum((output_activations - y)**2) / len(y)
+        # print(f"Cost: {cost}, shape: {cost.shape}")
+        return float(cost)
 
     def cost_derivative(self, output_activations, y):
         """Return the vector of partial derivatives \partial C_x /
